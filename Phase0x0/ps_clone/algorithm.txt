@@ -1,0 +1,120 @@
+/*
+=====================================================
+              PS CLONE - LINUX VERSION
+        ALGORITHM FOR A CUSTOM 'ps' TOOL
+=====================================================
+
+DESCRIPTION:
+------------
+A simple clone of the 'ps' command in Linux, written in C,
+by directly reading from the /proc virtual filesystem.
+This is ideal for understanding process enumeration at
+a low level, useful for red team tooling or rootkit learning.
+
+GOAL:
+-----
+List running processes along with their PID, TTY, STAT, TIME, and CMD
+(just like `ps` does with `ps -e` or `ps aux`).
+
+=====================================================
+        HIGH LEVEL STRUCTURE OF THE PROGRAM
+=====================================================
+
+[1]  Initialize required data structures.
+[2]  Open the /proc directory.
+[3]  Iterate over each directory entry in /proc.
+[4]  Check if the entry name is numeric (i.e., a PID).
+[5]  For each valid PID:
+     [5.1]  Construct path to /proc/<pid>/stat
+     [5.2]  Open and parse the /stat file to extract:
+            - pid
+            - comm (process name)
+            - state
+            - pgrp, session, tty_nr
+            - utime, stime
+     [5.3]  Construct path to /proc/<pid>/cmdline
+     [5.4]  Read the command line
+     [5.5]  Format tty_nr into human-readable TTY
+     [5.6]  Convert jiffies to TIME (cpu time)
+     [5.7]  Display or store the process information.
+[6]  Clean up and close all resources.
+
+=====================================================
+        LOW LEVEL STEP-BY-STEP ALGORITHM
+=====================================================
+
+1. INCLUDE HEADERS
+   - stdio.h, stdlib.h, string.h, dirent.h
+   - unistd.h, sys/types.h, sys/stat.h, fcntl.h
+   - time.h, pwd.h, grp.h, etc. if needed
+
+2. DEFINE UTILITY FUNCTIONS
+   - is_numeric(const char *str)
+   - jiffies_to_time(unsigned long jiffies)
+   - tty_to_string(int tty_nr)
+
+3. OPEN /proc DIRECTORY
+   DIR *proc = opendir("/proc");
+
+4. LOOP OVER /proc ENTRIES
+   while ((entry = readdir(proc)) != NULL)
+   {
+       if (is_numeric(entry->d_name))
+       {
+           char stat_path[PATH_MAX];
+           snprintf(stat_path, sizeof(stat_path), "/proc/%s/stat", entry->d_name);
+
+           // Open /proc/<pid>/stat
+           FILE *stat_file = fopen(stat_path, "r");
+           if (!stat_file) continue;
+
+           // Read required fields from stat
+           // Format: pid (comm) state ... tty_nr ... utime stime ...
+           // Read into variables
+
+           fclose(stat_file);
+
+           // Open /proc/<pid>/cmdline
+           char cmdline_path[PATH_MAX];
+           snprintf(cmdline_path, sizeof(cmdline_path), "/proc/%s/cmdline", entry->d_name);
+
+           FILE *cmd_file = fopen(cmdline_path, "r");
+           if (cmd_file)
+           {
+               // Read and store command line
+               fclose(cmd_file);
+           }
+
+           // Convert and format fields (tty, cpu time, etc.)
+           // Display the formatted output
+       }
+   }
+
+5. CLEAN UP
+   - closedir(proc);
+   - free any allocated memory
+
+=====================================================
+         BONUS: STRUCTURE OUTPUT LIKE `ps`
+=====================================================
+
+FORMAT OUTPUT AS:
+PID     TTY        STAT     TIME       CMD
+
+EXAMPLE:
+1234    pts/0      S        00:00:01   /usr/bin/bash
+
+=====================================================
+        OPTIONAL EXTENSIONS (FOR LATER)
+=====================================================
+
+[+] Detect and handle zombie processes.
+[+] Handle kernel threads (usually in square brackets).
+[+] Add flags to filter output (e.g., only user-owned procs).
+[+] Hide certain processes (like malware/rootkits might).
+[+] Display full memory/cpu usage info.
+
+=====================================================
+           END OF PS CLONE ALGORITHM
+=====================================================
+*/
