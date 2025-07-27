@@ -8,14 +8,16 @@
 #include <fcntl.h>
 
 // Process info struct.
-typedef struct ProcInfo
-{
-  unsigned long pid;
-  const char *tty;
-  char state;
-  unsigned long time;
-  const char *cmd;
-} ProcInfo;
+typedef struct {
+    int pid;
+    char comm[256];
+    char state;
+    int ppid;
+    int tty_nr;
+    unsigned long utime;
+    unsigned long stime;
+    unsigned long long starttime;
+} proc_stat_t;
 
 // Function Prototypes.
 int is_numeric(const char *str);
@@ -70,6 +72,17 @@ int main(int argc, char *argv[])
 
       printf("%s\n", buffer);
 
+      proc_stat_t stat;
+if (parse_proc_stat("/proc/1234/stat", &stat) == 0) {
+    printf("PID: %d\n", stat.pid);
+    printf("CMD: %s\n", stat.comm);
+    printf("STATE: %c\n", stat.state);
+    printf("TTY: %d\n", stat.tty_nr);
+    printf("UTIME: %lu\n", stat.utime);
+    printf("STIME: %lu\n", stat.stime);
+    printf("STARTTIME: %llu\n", stat.starttime);
+}
+
       // printf("%s\n", entry->d_name);
     }
     
@@ -84,4 +97,49 @@ int is_numeric(const char *str)
 {
   return atoi(str);
 }
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
+int parse_proc_stat(const char *path, proc_stat_t *info) {
+    FILE *fp = fopen(path, "r");
+    if (!fp) return -1;
+
+    char buf[4096];
+    if (!fgets(buf, sizeof(buf), fp)) {
+        fclose(fp);
+        return -1;
+    }
+    fclose(fp);
+
+    // Find first '(' and last ')'
+    char *lparen = strchr(buf, '(');
+    char *rparen = strrchr(buf, ')');
+    if (!lparen || !rparen || rparen < lparen) return -1;
+
+    // Extract PID (before '(')
+    *lparen = '\0';
+    info->pid = atoi(buf);
+
+    // Extract comm
+    *rparen = '\0';
+    strncpy(info->comm, lparen + 1, sizeof(info->comm));
+    info->comm[sizeof(info->comm) - 1] = '\0';
+
+    // Continue parsing after ')'
+    char *rest = rparen + 1;
+    // Skip leading space
+    while (*rest == ' ') rest++;
+
+    // Now tokenize the rest
+    // Example: state ppid pgrp session tty_nr ...
+    sscanf(rest, "%c %d %*d %*d %d %*d %*u %*u %*u %*u %*u %*u %*u %lu %lu %*d %*d %*d %*d %llu",
+           &info->state,
+           &info->ppid,
+           &info->tty_nr,
+           &info->utime,
+           &info->stime,
+           &info->starttime);
+
+    return 0;
+}
