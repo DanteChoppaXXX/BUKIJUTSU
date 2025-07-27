@@ -23,14 +23,19 @@ typedef struct {
 int is_numeric(const char *str);
 long jiffies_to_time(unsigned long jiffies);
 char tty_to_string(int tty_nr);
-void parser(char *buffer);
+int parser(const char *path, proc_stat_t *info);
 
 int main(int argc, char *argv[])
 {
 
   printf("[+] Process Enumerator [Loading...]\n");
   // check for proper arguments.
-  if (argc < 2)
+  if (argc != 2)
+  {
+    printf("usage: <./program> <option>\noptions:\n\t-l: to list processes\n[Exiting...]\n");
+    return EXIT_FAILURE;
+  }
+  else if (strcmp(argv[1], "-l") != 0) 
   {
     printf("usage: <./program> <option>\noptions:\n\t-l: to list processes\n[Exiting...]\n");
     return EXIT_FAILURE;
@@ -57,37 +62,15 @@ int main(int argc, char *argv[])
       char stat_path[PATH_MAX];
       snprintf(stat_path, sizeof(stat_path), "/proc/%s/stat", entry->d_name);
 
-      // Open /proc/<pid>/stat.
-      FILE *stat_file = fopen(stat_path, "r");
-      if (!stat_file)
-      {
-        continue;
-      }
-
       // Read required fields from stat.
-      char buffer[PATH_MAX];
-      fread(buffer, PATH_MAX, 1, stat_file);
-
-      fclose(stat_file);
-
-      printf("%s\n", buffer);
-
       proc_stat_t stat;
-if (parse_proc_stat("/proc/1234/stat", &stat) == 0) {
-    printf("PID: %d\n", stat.pid);
-    printf("CMD: %s\n", stat.comm);
-    printf("STATE: %c\n", stat.state);
-    printf("TTY: %d\n", stat.tty_nr);
-    printf("UTIME: %lu\n", stat.utime);
-    printf("STIME: %lu\n", stat.stime);
-    printf("STARTTIME: %llu\n", stat.starttime);
-}
-
-      // printf("%s\n", entry->d_name);
+      if (parser(stat_path, &stat) == 0)
+      {
+          printf("PID: %-6d\t CMD: %-40s\t STATE: %c\t TTY: %-5d\t UTIME: %-7lu\t STIME: %-7lu\t STARTTIME: %-7llu\n", stat.pid, stat.comm, stat.state, stat.tty_nr, stat.utime, stat.stime, stat.starttime);
+      }
     }
     
   }
-
   closedir(proc);
   return EXIT_SUCCESS;
 }
@@ -97,11 +80,9 @@ int is_numeric(const char *str)
 {
   return atoi(str);
 }
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
-int parse_proc_stat(const char *path, proc_stat_t *info) {
+int parser(const char *path, proc_stat_t *info)
+{
     FILE *fp = fopen(path, "r");
     if (!fp) return -1;
 
