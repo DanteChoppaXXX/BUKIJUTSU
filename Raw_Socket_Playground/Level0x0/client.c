@@ -3,8 +3,6 @@
 */
 
 #include <arpa/inet.h>
-#include <errno.h>
-#include <netdb.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -64,11 +62,11 @@ int main(int argc, char *argv[])
     ssize_t bytes_received;
 
     // Receive server message.
-    while ((bytes_received = recv(client_sock, buffer, sizeof(buffer), 0)) > 0)
+    while ((bytes_received = recv(client_sock, buffer, sizeof(buffer) - 1, 0)) > 0)
     {
-        if (bytes_received < 0)
+        if (bytes_received == 0)
         {
-            perror("[x] Receiving! [FAILED]");
+            perror("[-] Server! [DISCONNECTED]");
             exit(EXIT_FAILURE);
         }
         buffer[bytes_received] = '\0';

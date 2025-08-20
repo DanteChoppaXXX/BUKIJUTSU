@@ -3,8 +3,6 @@
 */
 
 #include <arpa/inet.h>
-#include <errno.h>
-#include <netdb.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -64,7 +62,10 @@ int main(int argc, char *argv[])
     printf("[+] Listening On Port: %d [SUCCESS]\n", atoi(argv[2]));
 
     // Accept incoming client connection.
-    int client_sock = accept(server_sock, (struct sockaddr *)&server_addr, &server_addr_len);
+    struct sockaddr_in client_addr;
+    socklen_t client_addr_len = sizeof(client_addr);
+
+    int client_sock = accept(server_sock, (struct sockaddr *)&client_addr, &client_addr_len);
     if (client_sock < 0)
     {
         perror("[x] Accept! [FAILED]");
@@ -73,7 +74,7 @@ int main(int argc, char *argv[])
     printf("[+] New Client Online: FD %d [SUCCESS]\n", client_sock);
     
     // Send message to client.
-    const char *message = "Welcome To The Dojo! Warrior\n";
+    const char *message = "Welcome To The Dojo! Warrior";
 
     ssize_t bytes_sent = send(client_sock, message, strlen(message), 0);
     if (bytes_sent < 0)
@@ -85,18 +86,18 @@ int main(int argc, char *argv[])
     ssize_t bytes_received;
 
     // Receive client message and echo it back.
-    while((bytes_received = recv(client_sock, buffer, sizeof(buffer), 0)) > 0)
+    while((bytes_received = recv(client_sock, buffer, sizeof(buffer) - 1, 0)) > 0)
     {
-        if (bytes_received < 0)
+        if (bytes_received == 0)
         {
-            perror("[x] Receiving! [FAILED]");
+            perror("[-] Client! [DISCONNECTED]");
             exit(EXIT_FAILURE);
         }
         buffer[bytes_received] = '\0';
         printf("[+] Received %lu bytes from client [%s]\n", bytes_received, buffer);
         
         // Echo back the message to the client.
-        ssize_t bytes_sent = send(client_sock, buffer, strlen(buffer), 0);
+        ssize_t bytes_sent = send(client_sock, buffer, bytes_received, 0);
         if (bytes_sent < 0)
         {
             perror("[x] Sending! [FAILED]");
