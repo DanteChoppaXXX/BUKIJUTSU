@@ -47,7 +47,11 @@ int main(int argc, char *argv[])
 
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(atoi(argv[2]));
-    inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr.s_addr);
+    if (inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr.s_addr) < 0)
+    {
+        fprintf(stderr, "[x] Invalid Address: %s [FAILED]\n", SERVER_IP);
+        exit(EXIT_FAILURE);
+    }
 
     // Connect to the server.
     if (connect(client_sock, (struct sockaddr *)&server_addr, server_addr_len) <
