@@ -70,33 +70,23 @@ int main(int argc, char *argv[])
         perror("[x] Connect! [FAILED]");
         exit(EXIT_FAILURE);
     }
-    printf("[+] Connected! [SUCCESS]\n");
+    // printf("[+] Connected! [SUCCESS]\n");
+    char buffer[1024];
+    ssize_t bytes_received;
+
+    // Receive incoming messages from the server.
+    bytes_received = recv(server_sock, buffer, sizeof(buffer) - 1, 0);
+    if (bytes_received < 0)
+    {
+        perror("[x] Receive! [FAILED]");
+        exit(EXIT_FAILURE);
+    }
+    buffer[bytes_received] = '\0';
+    printf("[+] %s [CONNECTED!]\n", buffer);
 
     // Spawn a new process for sending messages to the server.
     pid_t pid = fork();
     if (pid == 0) // Child Process.
-    {
-        while (0x1)
-        {
-            // Send message to the server.
-            char message[1024];
-            printf("Client:$=> ");
-            fgets(message, sizeof(message), stdin);
-            message[strcspn(message, "\n")] = '\0';
-
-            ssize_t bytes_sent = send(server_sock, message, strlen(message), 0);
-            if (bytes_sent < 0)
-            {
-                perror("[x] Sending! [FAILED]");
-                exit(EXIT_FAILURE);
-            }
-            printf("[+] Sent [SUCCESS]\n");
-        }
-
-        close(server_sock);
-        exit(EXIT_SUCCESS);
-    }
-    else if (pid > 0) // Parent Process.
     {
         char buffer[1024];
         ssize_t bytes_received;
@@ -111,13 +101,49 @@ int main(int argc, char *argv[])
                 exit(EXIT_FAILURE);
             }
             buffer[bytes_received] = '\0';
-            printf("[+] %s [Server-Echo]\n", buffer);
+            printf("\033[A\r");
+            printf("[+] %s [Server-Echo]\n\n", buffer);
         }
+    }
+    else if (pid > 0) // Parent Process.
+    {
+        // Send message to the server.
+        char message[1024];
 
-        close(server_sock);
-        // Reap the finished children.
-        waitpid(pid, NULL, 0);
-        // reap_finished_children();
+        while (0x1)
+        {
+            waitpid(-1, NULL, WNOHANG);
+            printf("\nClient:$=> ");
+
+            if (fgets(message, sizeof(message), stdin) == NULL)
+            {
+                break;
+            }
+
+            //  Check if user typed exit command.
+            if (strcmp(message, "exit\n") == 0)
+            {
+                printf("[-] Exiting Dojo... [Zzz]\n");
+                break;
+            }
+
+            // Check if user pressed enter without typing anything OR typed only
+            // spaces or tabs.
+            if (strspn(message, " \t\n") == strlen(message))
+            {
+                continue;
+            }
+
+            message[strcspn(message, "\n")] = '\0';
+
+            ssize_t bytes_sent = send(server_sock, message, strlen(message), 0);
+            if (bytes_sent < 0)
+            {
+                perror("[x] Sending! [FAILED]");
+                exit(EXIT_FAILURE);
+            }
+            printf("[+] Sent [SUCCESS]\n");
+        }
     }
     else
     {
@@ -127,5 +153,6 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    close(server_sock);
     return EXIT_SUCCESS;
 }

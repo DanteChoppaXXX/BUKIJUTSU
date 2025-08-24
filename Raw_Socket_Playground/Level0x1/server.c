@@ -20,7 +20,6 @@
 
 // Function Prototype.
 void handle_client(int client_sock);
-void reap_finished_children();
 
 int main(int argc, char *argv[])
 {
@@ -118,9 +117,16 @@ int main(int argc, char *argv[])
         else if (pid > 0) // Parent Process.
         {
             close(client_sock);
+
             // Reap the finished children.
-            waitpid(pid, NULL, 0);
-            // reap_finished_children();
+            pid_t dead_pid, status;
+
+            while ((dead_pid = waitpid(-1, &status, WNOHANG)) > 0)
+            {
+                // Clean up finished child.
+                printf("[Zzz] Child Process %d: Status %d [REAPED!]\n",
+                       dead_pid, status);
+            }
         }
         else
         {
@@ -172,9 +178,4 @@ void handle_client(int client_sock)
         }
         printf("[+] Sent %zu bytes to client [SUCCESS]\n", bytes_sent);
     }
-}
-
-void reap_finished_children()
-{
-    // Reap finished children.
 }
