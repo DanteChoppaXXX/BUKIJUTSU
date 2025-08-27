@@ -9,7 +9,7 @@
 
 // Function Prototype.
 int get_minutes(const char *string);
-void countdown(int *seconds);
+void countdown(int seconds);
 
 int main(int argc, char *argv[])
 {
@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    // Validate user input is an integer.
+    // Validate that user input is an integer and consist of only digits.
     int minutes = get_minutes(argv[1]);
     if (minutes == -1)
     {
@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
     printf("\033[1;32m[+] Timer Set For %d Minutes [%d Seconds]\n", minutes, seconds);
 
     // Invoke countdown function.
-    countdown(&seconds);
+    countdown(seconds);
 
     // Display message upon countdown completion.
     printf("\033[1;31m[-] Time Up! [DONE]\n");
@@ -64,21 +64,20 @@ int get_minutes(const char *string)
 }    
 
 // Timer countdown function.
-void countdown(int *seconds)
+void countdown(int seconds)
 {
     // Initiate countdown with a while loop.
-    while (*seconds)
+    while (seconds--)
     {
         // Display time left.
-        printf("\033[0m[+] Time Left [\033[1;33m%d\033[0m]\n", *seconds);
-        printf("\033[A\033[2K");
-        // printf("\r%d", seconds);
+        printf("\033[0m[+] Time Left [\033[1;33m%d\033[0m]\n", seconds + 1);
+        fflush(stdout);
 
         // Sleep 1 second.
         sleep(1);
 
-        // Decrease seconds by 1.
-        *seconds -= 1;
+        // Move cursor up one line and clear the line.
+        printf("\033[A\033[2K");
     }
 
 }
