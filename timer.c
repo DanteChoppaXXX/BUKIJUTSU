@@ -9,6 +9,7 @@
 
 // Function Prototype.
 int get_minutes(const char *string);
+void countdown(int *seconds);
 
 int main(int argc, char *argv[])
 {
@@ -35,20 +36,9 @@ int main(int argc, char *argv[])
 
     printf("\033[1;32m[+] Timer Set For %d Minutes [%d Seconds]\n", minutes, seconds);
 
-    // Initiate countdown with a while loop.
-    while (seconds)
-    {
-        // Display time left.
-        printf("\033[0m[+] Time Left [\033[1;33m%d\033[0m]\n", seconds);
-        printf("\033[A\033[2K");
-       // printf("\r%d", seconds);
+    // Invoke countdown function.
+    countdown(&seconds);
 
-        // Sleep 1 second.
-        sleep(1);
-
-        // Decrease seconds by 1.
-        seconds--;
-    }
     // Display message upon countdown completion.
     printf("\033[1;31m[-] Time Up! [DONE]\n");
 
@@ -73,4 +63,22 @@ int get_minutes(const char *string)
     return (minutes >= 1 && minutes <= 1440) ? minutes : -1;
 }    
 
+// Timer countdown function.
+void countdown(int *seconds)
+{
+    // Initiate countdown with a while loop.
+    while (*seconds)
+    {
+        // Display time left.
+        printf("\033[0m[+] Time Left [\033[1;33m%d\033[0m]\n", *seconds);
+        printf("\033[A\033[2K");
+        // printf("\r%d", seconds);
 
+        // Sleep 1 second.
+        sleep(1);
+
+        // Decrease seconds by 1.
+        *seconds -= 1;
+    }
+
+}
