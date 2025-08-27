@@ -39,6 +39,9 @@ int main(int argc, char *argv[])
     // Invoke countdown function.
     countdown(seconds);
 
+    // Terminal beeps/sounds.
+    printf("\a");
+
     // Display message upon countdown completion.
     printf("\033[1;31m[-] Time Up! [DONE]\n");
 
