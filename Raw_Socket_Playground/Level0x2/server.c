@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
         client_args->client_socket = client_sock;
 
         // Create a new thread for the new client.
-        pthread = pthread_create(&client_thread, NULL, (void *)&handle_client,
+        pthread = pthread_create(&client_thread, NULL, handle_client,
                                  (void *)client_args);
         if (pthread != 0)
         {
