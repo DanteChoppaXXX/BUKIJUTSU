@@ -1,0 +1,68 @@
+=========================
+ Multi-Client Server Fixes
+=========================
+
+1. Fix thread function signature:
+   - Change:
+       void handle_client(void *args)
+     To:
+       void *handle_client(void *args)
+     Add at end:
+       return NULL;
+
+2. Fix incorrect argument passed to pthread_create:
+   - Change:
+       (void *)&client_args->client_socket
+     To:
+       (void *)client_args
+
+3. Free allocated memory inside thread:
+   - After done using client socket in handle_client():
+       close(client_sock->client_socket);
+       free(client_sock);
+
+4. Use pthread_detach() to prevent resource leaks:
+   - After pthread_create():
+       pthread_detach(client_thread);
+
+5. Avoid exit() inside thread:
+   - Replace all exit() calls in handle_client() with:
+       close(client_sock->client_socket);
+       free(client_sock);
+       return NULL;
+
+6. Increase listen() backlog value:
+   - Change:
+       listen(server_sock, 1);
+     To:
+       listen(server_sock, MAX_CLIENTS);
+
+7. Free memory if pthread_create() fails:
+   - Before exit:
+       free(client_args);
+
+8. Improve while loop readability:
+   - Change:
+       while (0x1)
+     To:
+       while (1)
+
+9. Optional: Print client IP address on connect:
+   - Add after accept():
+       printf("[+] Client Connected: %s:%d\n",
+              inet_ntoa(client_addr.sin_addr),
+              ntohs(client_addr.sin_port));
+
+10. Optional: Add graceful shutdown handling:
+    - Use signal handler:
+        #include <signal.h>
+        void handle_sigint(int sig) {
+            close(server_sock);
+            exit(0);
+        }
+        signal(SIGINT, handle_sigint);
+
+=========================
+ End of Fix List
+=========================
+

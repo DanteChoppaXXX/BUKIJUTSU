@@ -1,7 +1,7 @@
 /*
     A Multi-Client Server
-    Concurrency Method: Multi-Threading with pthread (Each connected client gets a
-   separate thread)
+    Concurrency Method: Multi-Threading with pthread (Each connected client gets
+   a separate thread)
 */
 
 #include "utils.h"
@@ -15,19 +15,23 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <signal.h>
 
 #define MAX_CLIENTS 10
-
-typedef struct 
+int server_sock; 
+typedef struct
 {
     int client_socket;
 } Client_Args;
 
 // Function Prototype.
-void handle_client(void *args);
+void *handle_client(void *args);
+void handle_sigint(int sig);
 
 int main(int argc, char *argv[])
 {
+    signal(SIGINT, handle_sigint);
+
     // check for proper arguments.
     if (argc != 3)
     {
@@ -52,7 +56,7 @@ int main(int argc, char *argv[])
     }
 
     // Create the server socket.
-    int server_sock = socket(AF_INET, SOCK_STREAM, 0);
+    server_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (server_sock < 0)
     {
         perror("[x] Socket Creation! [FAILED]");
@@ -77,7 +81,7 @@ int main(int argc, char *argv[])
     }
 
     // Listen for incoming client connection.
-    if (listen(server_sock, 1) < 0)
+    if (listen(server_sock, MAX_CLIENTS) < 0)
     {
         perror("[x] Listening! [FAILED]");
         exit(EXIT_FAILURE);
@@ -90,7 +94,7 @@ int main(int argc, char *argv[])
     int client_sock, pthread;
     pthread_t client_thread;
 
-    while (0x1)
+    while (1)
     {
 
         client_sock = accept(server_sock, (struct sockaddr *)&client_addr,
@@ -107,7 +111,7 @@ int main(int argc, char *argv[])
                 exit(EXIT_FAILURE);
             }
         }
-        printf("[+] New Client Online: FD %d [SUCCESS]\n", client_sock);
+        printf("[+] New Client Online: FD %d [%s:%d]\n", client_sock, inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
         Client_Args *client_args = malloc(sizeof(Client_Args));
         if (client_args == NULL)
@@ -121,15 +125,16 @@ int main(int argc, char *argv[])
 
         // Create a new thread for the new client.
         pthread = pthread_create(&client_thread, NULL, (void *)&handle_client,
-                                 (void *)&client_args->client_socket);
+                                 (void *)client_args);
         if (pthread != 0)
         {
             fprintf(stderr, "[x] Pthread Create! [FAILED]\n");
+            free(client_args);
             exit(EXIT_FAILURE);
         }
 
-        // Wait for the thread to finish execution.
-        // pthread_join(client_thread, NULL);
+        // Detach thread to prevent resource leaks.
+        pthread_detach(client_thread);
     }
 
     close(server_sock);
@@ -137,42 +142,62 @@ int main(int argc, char *argv[])
     return EXIT_SUCCESS;
 }
 
-void handle_client(void *args)
+// Function to handle connected clients.
+void *handle_client(void *args)
 {
     // Handle connected clients.
     Client_Args *client_sock = (Client_Args *)args;
     // Send message to client.
     const char *message = "Welcome To The Dojo! Warrior";
 
-    ssize_t bytes_sent = send(client_sock->client_socket, message, strlen(message), 0);
+    ssize_t bytes_sent =
+        send(client_sock->client_socket, message, strlen(message), 0);
     if (bytes_sent < 0)
     {
         perror("[x] Sending! [FAILED]");
-        exit(EXIT_FAILURE);
+        close(client_sock->client_socket);
+        free(client_sock);
+        return NULL;
     }
     char buffer[1024];
     ssize_t bytes_received;
 
     // Receive client message and echo it back.
-    while ((bytes_received =
-                recv(client_sock->client_socket, buffer, sizeof(buffer) - 1, 0)) > 0)
+    while ((bytes_received = recv(client_sock->client_socket, buffer,
+                                  sizeof(buffer) - 1, 0)) > 0)
     {
         if (bytes_received == 0)
         {
             perror("[-] Client! [DISCONNECTED]");
-            exit(EXIT_FAILURE);
+            close(client_sock->client_socket);
+            free(client_sock);
+            return NULL;
         }
         buffer[bytes_received] = '\0';
         printf("[+] Received %zu bytes from client [%s]\n", bytes_received,
                buffer);
 
         // Echo back the message to the client.
-        ssize_t bytes_sent = send(client_sock->client_socket, buffer, bytes_received, 0);
+        ssize_t bytes_sent =
+            send(client_sock->client_socket, buffer, bytes_received, 0);
         if (bytes_sent < 0)
         {
             perror("[x] Sending! [FAILED]");
-            exit(EXIT_FAILURE);
+            close(client_sock->client_socket);
+            free(client_sock);
+            return NULL;
         }
         printf("[+] Sent %zu bytes to client [SUCCESS]\n", bytes_sent);
     }
+
+    close(client_sock->client_socket);
+    free(client_sock);
+    return NULL;
+}
+
+// Graceful shutdown handling.
+void handle_sigint(int sig)
+{
+    close(server_sock);
+    exit(EXIT_SUCCESS);
 }
