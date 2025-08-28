@@ -6,15 +6,19 @@
 #include "utils.h"
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <wait.h>
 
 #define SERVER_IP "127.0.0.1"
+
+// Function Prototype.
+void handle_receive(void *args);
+void handle_send(void *args);
 
 int main(int argc, char *argv[])
 {
@@ -84,75 +88,97 @@ int main(int argc, char *argv[])
     buffer[bytes_received] = '\0';
     printf("[+] %s [CONNECTED!]\n", buffer);
 
-    // Spawn a new process for sending messages to the server.
-    pid_t pid = fork();
-    if (pid == 0) // Child Process.
-    {
-        char buffer[1024];
-        ssize_t bytes_received;
+    // Create two threads (1) for sending messages (2) for receiving messages.
+    pthread_t send_thread, receive_thread;
+    int pthread1, pthread2;
 
-        // Receive incoming messages from the server.
-        while ((bytes_received =
-                    recv(server_sock, buffer, sizeof(buffer) - 1, 0)) > 0)
-        {
-            if (bytes_received == 0)
-            {
-                perror("[-] Server! [DISCONNECTED]");
-                exit(EXIT_FAILURE);
-            }
-            buffer[bytes_received] = '\0';
-            printf("\033[A\r");
-            printf("[+] %s [Server-Echo]\n\n", buffer);
-        }
+    // Create sending thread.
+    pthread1 = pthread_create(&send_thread, NULL, (void *)&handle_send,
+                              (void *)&server_sock);
+    if (pthread1 != 0)
+    {
+        fprintf(stderr, "[x] Pthread Create! [FAILED]\n");
+        exit(EXIT_FAILURE);
     }
-    else if (pid > 0) // Parent Process.
+    // Create receive thread.
+    pthread2 = pthread_create(&receive_thread, NULL, (void *)&handle_receive,
+                              (void *)&server_sock);
+    if (pthread2 != 0)
     {
-        // Send message to the server.
-        char message[1024];
-
-        while (0x1)
-        {
-            waitpid(-1, NULL, WNOHANG);
-            printf("\nClient:$=> ");
-
-            if (fgets(message, sizeof(message), stdin) == NULL)
-            {
-                break;
-            }
-
-            //  Check if user typed exit command.
-            if (strcmp(message, "exit\n") == 0)
-            {
-                printf("[-] Exiting Dojo... [Zzz]\n");
-                break;
-            }
-
-            // Check if user pressed enter without typing anything OR typed only
-            // spaces or tabs.
-            if (strspn(message, " \t\n") == strlen(message))
-            {
-                continue;
-            }
-
-            message[strcspn(message, "\n")] = '\0';
-
-            ssize_t bytes_sent = send(server_sock, message, strlen(message), 0);
-            if (bytes_sent < 0)
-            {
-                perror("[x] Sending! [FAILED]");
-                exit(EXIT_FAILURE);
-            }
-            printf("[+] Sent [SUCCESS]\n");
-        }
-    }
-    else
-    {
-        // Handle fork error.
-        perror("[x] Process Fork! [FAILED]");
-        close(server_sock);
+        fprintf(stderr, "[x] Pthread Create! [FAILED]\n");
         exit(EXIT_FAILURE);
     }
 
+    // Wait for the threads to finish execution.
+    pthread_join(send_thread, NULL);
+    // pthread_join(receive_thread, NULL);
+
     close(server_sock);
     return EXIT_SUCCESS;
+}
+
+// Function for receiving message.
+void handle_receive(void *args)
+{
+    int *server_sock = (int *)args;
+    char buffer[1024];
+    ssize_t bytes_received;
+
+    // Receive incoming messages from the server.
+    while ((bytes_received = recv(*server_sock, buffer, sizeof(buffer) - 1, 0)) >
+           0)
+    {
+        if (bytes_received == 0)
+        {
+            perror("[-] Server! [DISCONNECTED]");
+            exit(EXIT_FAILURE);
+        }
+        buffer[bytes_received] = '\0';
+        printf("\033[A\r");
+        printf("[+] %s [Server-Echo]\n\n", buffer);
+    }
+}
+
+// Function for sending message.
+void handle_send(void *args)
+{
+    int *server_sock = (int *)args;
+
+    // Send message to the server.
+    char message[1024];
+
+    while (0x1)
+    {
+        printf("\nClient:$=> ");
+
+        if (fgets(message, sizeof(message), stdin) == NULL)
+        {
+            break;
+        }
+
+        //  Check if user typed exit command.
+        if (strcmp(message, "exit\n") == 0)
+        {
+            printf("[-] Exiting Dojo... [Zzz]\n");
+            close(*server_sock);
+            exit(EXIT_SUCCESS);
+        }
+
+        // Check if user pressed enter without typing anything OR typed only
+        // spaces or tabs.
+        if (strspn(message, " \t\n") == strlen(message))
+        {
+            continue;
+        }
+
+        message[strcspn(message, "\n")] = '\0';
+
+        ssize_t bytes_sent = send(*server_sock, message, strlen(message), 0);
+        if (bytes_sent < 0)
+        {
+            perror("[x] Sending! [FAILED]");
+            exit(EXIT_FAILURE);
+        }
+        printf("[+] Sent [SUCCESS]\n");
+    }
 }

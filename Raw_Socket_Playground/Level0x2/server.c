@@ -1,25 +1,30 @@
 /*
     A Multi-Client Server
-    Concurrency Method: One Client Per Process (Each connected client gets a
-   separate process)
+    Concurrency Method: Multi-Threading with pthread (Each connected client gets a
+   separate thread)
 */
 
 #include "utils.h"
 #include <arpa/inet.h>
 #include <errno.h>
 #include <netinet/in.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <wait.h>
 
 #define MAX_CLIENTS 10
 
+typedef struct 
+{
+    int client_socket;
+} Client_Args;
+
 // Function Prototype.
-void handle_client(int client_sock);
+void handle_client(void *args);
 
 int main(int argc, char *argv[])
 {
@@ -82,10 +87,12 @@ int main(int argc, char *argv[])
     // Accept incoming client connection.
     struct sockaddr_in client_addr;
     socklen_t client_addr_len = sizeof(client_addr);
-    int client_sock;
+    int client_sock, pthread;
+    pthread_t client_thread;
 
     while (0x1)
     {
+
         client_sock = accept(server_sock, (struct sockaddr *)&client_addr,
                              &client_addr_len);
         if (client_sock < 0)
@@ -102,38 +109,27 @@ int main(int argc, char *argv[])
         }
         printf("[+] New Client Online: FD %d [SUCCESS]\n", client_sock);
 
-        // Spawn a new process for the new client.
-        pid_t pid = fork();
-        if (pid == 0) // Child Process.
+        Client_Args *client_args = malloc(sizeof(Client_Args));
+        if (client_args == NULL)
         {
-            // Close the listening socket.
+            fprintf(stderr, "[x] Memory Allocation! [FAILED]\n");
             close(server_sock);
-
-            // Handle the new client.
-            handle_client(client_sock);
-            close(client_sock);
-            exit(EXIT_SUCCESS);
-        }
-        else if (pid > 0) // Parent Process.
-        {
-            close(client_sock);
-
-            // Reap the finished children.
-            pid_t dead_pid, status;
-
-            while ((dead_pid = waitpid(-1, &status, WNOHANG)) > 0)
-            {
-                // Clean up finished child.
-                printf("[Zzz] Child Process %d: Status %d [REAPED!]\n",
-                       dead_pid, status);
-            }
-        }
-        else
-        {
-            // Handle fork error.
-            perror("[x] Process Fork! [FAILED]");
             exit(EXIT_FAILURE);
         }
+
+        client_args->client_socket = client_sock;
+
+        // Create a new thread for the new client.
+        pthread = pthread_create(&client_thread, NULL, (void *)&handle_client,
+                                 (void *)&client_args->client_socket);
+        if (pthread != 0)
+        {
+            fprintf(stderr, "[x] Pthread Create! [FAILED]\n");
+            exit(EXIT_FAILURE);
+        }
+
+        // Wait for the thread to finish execution.
+        // pthread_join(client_thread, NULL);
     }
 
     close(server_sock);
@@ -141,13 +137,14 @@ int main(int argc, char *argv[])
     return EXIT_SUCCESS;
 }
 
-void handle_client(int client_sock)
+void handle_client(void *args)
 {
     // Handle connected clients.
+    Client_Args *client_sock = (Client_Args *)args;
     // Send message to client.
     const char *message = "Welcome To The Dojo! Warrior";
 
-    ssize_t bytes_sent = send(client_sock, message, strlen(message), 0);
+    ssize_t bytes_sent = send(client_sock->client_socket, message, strlen(message), 0);
     if (bytes_sent < 0)
     {
         perror("[x] Sending! [FAILED]");
@@ -157,8 +154,8 @@ void handle_client(int client_sock)
     ssize_t bytes_received;
 
     // Receive client message and echo it back.
-    while ((bytes_received = recv(client_sock, buffer, sizeof(buffer) - 1, 0)) >
-           0)
+    while ((bytes_received =
+                recv(client_sock->client_socket, buffer, sizeof(buffer) - 1, 0)) > 0)
     {
         if (bytes_received == 0)
         {
@@ -170,7 +167,7 @@ void handle_client(int client_sock)
                buffer);
 
         // Echo back the message to the client.
-        ssize_t bytes_sent = send(client_sock, buffer, bytes_received, 0);
+        ssize_t bytes_sent = send(client_sock->client_socket, buffer, bytes_received, 0);
         if (bytes_sent < 0)
         {
             perror("[x] Sending! [FAILED]");
