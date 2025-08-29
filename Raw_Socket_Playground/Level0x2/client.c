@@ -17,8 +17,8 @@
 #define SERVER_IP "127.0.0.1"
 
 // Function Prototype.
-void handle_receive(void *args);
-void handle_send(void *args);
+void *handle_receive(void *args);
+void *handle_send(void *args);
 
 int main(int argc, char *argv[])
 {
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
     int server_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (server_sock < 0)
     {
-        perror("[x] Socket Creation! [FAILED]");
+        fprintf(stderr, "[x] Socket Creation! [FAILED]\n");
         exit(EXIT_FAILURE);
     }
     printf("[+] Client Socket Created!: FD %d [SUCCESS]\n", server_sock);
@@ -64,6 +64,7 @@ int main(int argc, char *argv[])
     if (inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr.s_addr) < 0)
     {
         fprintf(stderr, "[x] Invalid Address: %s [FAILED]\n", SERVER_IP);
+        close(server_sock);
         exit(EXIT_FAILURE);
     }
 
@@ -71,7 +72,8 @@ int main(int argc, char *argv[])
     if (connect(server_sock, (struct sockaddr *)&server_addr, server_addr_len) <
         0)
     {
-        perror("[x] Connect! [FAILED]");
+        fprintf(stderr, "[x] Connect! [FAILED]\n");
+        close(server_sock);
         exit(EXIT_FAILURE);
     }
     // printf("[+] Connected! [SUCCESS]\n");
@@ -82,7 +84,8 @@ int main(int argc, char *argv[])
     bytes_received = recv(server_sock, buffer, sizeof(buffer) - 1, 0);
     if (bytes_received < 0)
     {
-        perror("[x] Receive! [FAILED]");
+        fprintf(stderr, "[x] Receive! [FAILED]\n");
+        close(server_sock);
         exit(EXIT_FAILURE);
     }
     buffer[bytes_received] = '\0';
@@ -93,32 +96,34 @@ int main(int argc, char *argv[])
     int pthread1, pthread2;
 
     // Create sending thread.
-    pthread1 = pthread_create(&send_thread, NULL, (void *)&handle_send,
+    pthread1 = pthread_create(&send_thread, NULL, handle_send,
                               (void *)&server_sock);
     if (pthread1 != 0)
     {
         fprintf(stderr, "[x] Pthread Create! [FAILED]\n");
+        close(server_sock);
         exit(EXIT_FAILURE);
     }
     // Create receive thread.
-    pthread2 = pthread_create(&receive_thread, NULL, (void *)&handle_receive,
+    pthread2 = pthread_create(&receive_thread, NULL, handle_receive,
                               (void *)&server_sock);
     if (pthread2 != 0)
     {
         fprintf(stderr, "[x] Pthread Create! [FAILED]\n");
+        close(server_sock);
         exit(EXIT_FAILURE);
     }
 
     // Wait for the threads to finish execution.
     pthread_join(send_thread, NULL);
-    // pthread_join(receive_thread, NULL);
+    pthread_detach(receive_thread);
 
     close(server_sock);
     return EXIT_SUCCESS;
 }
 
 // Function for receiving message.
-void handle_receive(void *args)
+void *handle_receive(void *args)
 {
     int *server_sock = (int *)args;
     char buffer[1024];
@@ -130,17 +135,19 @@ void handle_receive(void *args)
     {
         if (bytes_received == 0)
         {
-            perror("[-] Server! [DISCONNECTED]");
+            fprintf(stderr, "[-] Server! [DISCONNECTED]\n");
             exit(EXIT_FAILURE);
         }
         buffer[bytes_received] = '\0';
         printf("\033[A\r");
         printf("[+] %s [Server-Echo]\n\n", buffer);
     }
+
+    return NULL;
 }
 
 // Function for sending message.
-void handle_send(void *args)
+void *handle_send(void *args)
 {
     int *server_sock = (int *)args;
 
@@ -176,9 +183,11 @@ void handle_send(void *args)
         ssize_t bytes_sent = send(*server_sock, message, strlen(message), 0);
         if (bytes_sent < 0)
         {
-            perror("[x] Sending! [FAILED]");
+            fprintf(stderr, "[x] Sending! [FAILED]\n");
             exit(EXIT_FAILURE);
         }
         printf("[+] Sent [SUCCESS]\n");
     }
+
+    return NULL;
 }
