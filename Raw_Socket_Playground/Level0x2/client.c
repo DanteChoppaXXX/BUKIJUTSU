@@ -136,6 +136,7 @@ void *handle_receive(void *args)
         if (bytes_received == 0)
         {
             fprintf(stderr, "[-] Server! [DISCONNECTED]\n");
+            close(*server_sock);
             exit(EXIT_FAILURE);
         }
         buffer[bytes_received] = '\0';
