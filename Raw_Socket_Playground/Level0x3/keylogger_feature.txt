@@ -1,0 +1,15 @@
+** MULTI-CLIENT KEYLOGGER SERVER (CLIENTS SENDS KEYSTROKES) **
+
+* Understand The Problem:=> I want a server that handles multiple clients connection and stores keystrokes sent by the the clients.
+
+* Plan A Solution:=> The Server needs to do the follow:
+    - Handle multiple clients connection Concurrently.
+    - Store connected client's socket in an array.
+    - Be able to identify each clients.
+    - Receive and store keystrokes with the associated client.[e.g {Client_ID: "Client's Keystrokes"}].
+    - Remove disconnected clients from the lists of connected clients.
+    - Clean up resources and exit gracefully upon termination.
+
+* Code The Solution:=> Let's Get Going!
+
+* Reflect On The Solution:=> 

