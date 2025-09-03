@@ -1,0 +1,52 @@
+Weaknesses & Bugs
+
+Buffer size mismatch in snprintf:
+    Uses sizeof(buffer) instead of sizeof(keystrokes).
+
+    Could truncate or miscalculate written bytes.
+
+Uninitialized client_sockets management:
+
+Stores client_sock in client_sockets[numOfClients], but never removes it when a client disconnects.
+
+Array can contain stale descriptors → potential bug if later reused.
+
+Potential race conditions:
+
+numOfClients is mutex-protected, but client_sockets[] updates are not.
+
+Two threads could write into it simultaneously.
+
+File descriptor contention:
+
+Multiple threads call write(file_D, …) while holding the same lock. That prevents corruption, but write() is not guaranteed atomic for larger chunks. Luckily, small log lines should be safe.
+
+No bounds on client data:
+
+recv writes up to sizeof(buffer)-1, but logs it directly. A client could spam gigabytes and fill disk.
+
+Signal handling risk:
+
+handle_sigint closes descriptors directly, but doesn’t tell worker threads → they may write to a closed FD.
+
+Use of global variables everywhere:
+
+file_D, server_sock, numOfClients, client_sockets are all global, which hurts modularity.
+
+Minor issues:
+
+Variable named pthread shadows the pthread library name.
+
+No SO_REUSEADDR set → socket may fail to rebind quickly after restart.
+
+inet_ntoa is not thread-safe (but in practice okay here since printed immediately).
+
+Fix ideas:
+
+Use numOfClients only as a count, not an index.
+
+When adding a socket, scan for the first 0 slot.
+
+When removing, set it to 0 but don’t decrement numOfClients until after.
+
+Hold the mutex for the entire update (increment/decrement + array modification).

