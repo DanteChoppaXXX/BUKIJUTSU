@@ -14,6 +14,8 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <signal.h>
 
 #define MAX_CLIENTS 10
@@ -106,6 +108,8 @@ int main(int argc, char *argv[])
     
     int numOfClients = 0;
 
+    file_D = open("keystrokes.txt", O_WRONLY|O_CREAT|O_APPEND, S_IRUSR|S_IWUSR);
+
     while (numOfClients < MAX_CLIENTS)
     {
 
@@ -155,6 +159,7 @@ int main(int argc, char *argv[])
         pthread_detach(client_thread);
     }
 
+    close(file_D);
     close(server_sock);
 
     return EXIT_SUCCESS;
@@ -164,58 +169,67 @@ int main(int argc, char *argv[])
 void *handle_client(void *args)
 {
     // Handle connected clients.
-    Client_Args *client_sock = (Client_Args *)args;
+    Client_Args *client = (Client_Args *)args;
     // Send message to client.
     const char *message = "Welcome To The Dojo! Warrior";
 
     ssize_t bytes_sent =
-        send(client_sock->client_socket, message, strlen(message), 0);
+        send(client->client_socket, message, strlen(message), 0);
     if (bytes_sent < 0)
     {
         fprintf(stderr, "[x] Sending! [FAILED]\n");
-        close(client_sock->client_socket);
-        free(client_sock);
+        close(client->client_socket);
+        free(client);
         return NULL;
     }
-    char buffer[1024];
+    char buffer[1024], keystrokes[1024];
     ssize_t bytes_received;
 
     // Receive client message and echo it back.
-    while ((bytes_received = recv(client_sock->client_socket, buffer,
+    while ((bytes_received = recv(client->client_socket, buffer,
                                   sizeof(buffer) - 1, 0)) > 0)
     {
         if (bytes_received == 0)
         {
             fprintf(stderr, "[-] Client! [DISCONNECTED]\n");
-            close(client_sock->client_socket);
-            free(client_sock);
+            close(client->client_socket);
+            free(client);
             return NULL;
         }
         buffer[bytes_received] = '\0';
+
+        // Format the client keystrokes for logging.
+        int written = snprintf(keystrokes, sizeof(buffer), "[Client %d] %s [LOGGED]\n", client->client_socket, buffer);
+
+        pthread_mutex_lock(&mutexFD);
+        write(file_D, keystrokes, written);
+        pthread_mutex_unlock(&mutexFD);
+        
         printf("[+] Received %zu bytes from client [%s]\n", bytes_received,
                buffer);
 
         // Echo back the message to the client.
         ssize_t bytes_sent =
-            send(client_sock->client_socket, buffer, bytes_received, 0);
+            send(client->client_socket, buffer, bytes_received, 0);
         if (bytes_sent < 0)
         {
             fprintf(stderr, "[x] Sending! [FAILED]\n");
-            close(client_sock->client_socket);
-            free(client_sock);
+            close(client->client_socket);
+            free(client);
             return NULL;
         }
         printf("[+] Sent %zu bytes to client [SUCCESS]\n", bytes_sent);
     }
 
-    close(client_sock->client_socket);
-    free(client_sock);
+    close(client->client_socket);
+    free(client);
     return NULL;
 }
 
 // Graceful shutdown handling.
 void handle_sigint(int sig)
 {
+    close(file_D);
     close(server_sock);
     exit(EXIT_SUCCESS);
 }
