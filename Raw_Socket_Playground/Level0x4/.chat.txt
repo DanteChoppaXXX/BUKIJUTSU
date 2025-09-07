@@ -1,0 +1,8 @@
+user1 [HH:MM]user1 #=> hello [HH:MM]user1 #=> world [HH:MM]Agent47 [HH:MM]
+Agent47 #=> Hello Boys! [HH:MM]
+Agent47 #=> Agent47 reporting... [HH:MM]
+Master [HH:MM]
+Master #=> Hello 47 [HH:MM]
+Agent47 #=> Greetings Master [HH:MM]
+Master #=> I know you're ready! [HH:MM]
+Agent47 #=> Absolutely Master [HH:MM]
