@@ -269,15 +269,3 @@ void *handle_send(void *args)
     return NULL;
 }
 
-// Add Username feature.
-// Add timestamp to chat.
-// time_t raw_time;
-// struct tm *timeinfo;
-//
-// time(&raw_time);
-// timeinfo = localtime(&raw_time);
-//
-// int hour = timeinfo->tm_hour;
-// int mins = timeinfo->tm_min;
-//
-// printf("[!] Logged In At %02d:%02d US-Eastern-Time [!]\n", hour, mins);
