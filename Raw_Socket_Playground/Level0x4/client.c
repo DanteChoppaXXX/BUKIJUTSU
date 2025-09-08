@@ -20,6 +20,7 @@
 #define BUFFER_SIZE 4096
 
 char username[USERNAME_SIZE];
+char timestr[10];
 
 // Function Prototype.
 void chat_prompt(void);
@@ -179,7 +180,10 @@ int main(int argc, char *argv[])
 
 void chat_prompt(void)
 {
-    printf("%s:$=> ", username);
+    time_t now = time(NULL);
+    struct tm *t = localtime(&now);
+    strftime(timestr, sizeof(timestr), "%H:%M:%S", t);
+    printf("\033[33m[%s]\033[0m \033[32m%s:>> \033[0m", timestr, username);
     fflush(stdout);
 }
 
@@ -192,7 +196,7 @@ void *handle_receive(void *args)
 
     // Receive incoming messages from the server.
     while ((bytes_received =
-                recv(*server_sock, buffer, sizeof(buffer) - 1, 0)) > 0)
+                recv(*server_sock, buffer, sizeof(buffer) - 1, 0)) >= 0)
     {
         if (bytes_received == 0)
         {
@@ -201,8 +205,8 @@ void *handle_receive(void *args)
             exit(EXIT_FAILURE);
         }
         buffer[bytes_received] = '\0';
-        printf("\033[A\r");
-        printf("\n%s\n", buffer);
+        printf("\033[2K\r");
+        printf("%s\n", buffer);
         fflush(stdout);
         chat_prompt();
     }
@@ -246,7 +250,13 @@ void *handle_send(void *args)
         message[strcspn(message, "\n")] = '\0';
 
         char buffer[BUFFER_SIZE];
-        snprintf(buffer, BUFFER_SIZE, "%s #=> %s", username, message);
+
+        time_t now = time(NULL);
+        struct tm *t = localtime(&now);
+        strftime(timestr, sizeof(timestr), "%H:%M:%S", t);
+        snprintf(buffer, BUFFER_SIZE,
+                 "\033[33m[%s]\033[0m \033[36m%-12s\033[1;32m >\033[0m %s",
+                 timestr, username, message);
 
         ssize_t bytes_sent = send(*server_sock, buffer, strlen(buffer), 0);
         if (bytes_sent < 0)
@@ -254,7 +264,6 @@ void *handle_send(void *args)
             fprintf(stderr, "[x] Sending! [FAILED]\n");
             exit(EXIT_FAILURE);
         }
-        // printf("[+] Sent [SUCCESS]\n");
     }
 
     return NULL;

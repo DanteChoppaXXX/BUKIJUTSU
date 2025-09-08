@@ -153,13 +153,14 @@ int main(int argc, char *argv[])
                 continue; // Retry accept()...
             }
 
-            // If shutdown closed the socket, accept will fail. Exit loop cleanly.
+            // If shutdown closed the socket, accept will fail. Exit loop
+            // cleanly.
             if (g_stop || errno == EBADF)
             {
                 break;
             }
 
-            fprintf(stderr, "[x] Accept! [FAILED]\n");
+            fprintf(stderr, "[x] Accept! %s [FAILED]\n", strerror(errno));
             // Continue rather than exit the whole process.
             continue;
         }
@@ -220,7 +221,8 @@ int main(int argc, char *argv[])
         {
             fprintf(stderr, "[x] Pthread Create! [FAILED]\n");
             free(client_args);
-            exit(EXIT_FAILURE);
+            remove_client(client_sock);
+            continue;
         }
 
         // Detach thread to prevent resource leaks.
@@ -263,7 +265,7 @@ void *handle_client(void *args)
             recv(client->client_socket, buffer, sizeof(buffer) - 1, 0);
         if (bytes_received == 0)
         {
-            fprintf(stderr, "[-] Client! [DISCONNECTED]\n");
+            fprintf(stderr, "[-] Client! %s [DISCONNECTED]\n", strerror(errno));
 
             // Remove client socket.
             remove_client(client->client_socket);
@@ -290,9 +292,9 @@ void *handle_client(void *args)
 
         buffer[bytes_received] = '\0';
 
-        // Format the client chat for logging.
-        int written_len =
-            snprintf(chat, sizeof(chat), "%s [HH:MM]", buffer);
+        // Format the client chat for logging and broadcasting.
+       
+        int written_len = snprintf(chat, sizeof(chat), "%s", buffer);
         if (written_len < 0)
         {
             // formatting error; skip write this round
@@ -309,7 +311,8 @@ void *handle_client(void *args)
         // Log the client's message.
         log_chat(chat, written_len);
 
-        // printf("[+] Received %zu bytes from client [%s]\n", bytes_received,       buffer);
+        // printf("[+] Received %zu bytes from client [%s]\n", bytes_received,
+        // buffer);
 
         // Broadcast chat to other clients.
         broadcast_chat(chat, written_len, client->client_socket);
@@ -361,8 +364,10 @@ int log_chat(char *chat, int written_len)
 {
     // Handle partial writes and errors.
     pthread_mutex_lock(&mutexFD);
-    const char *p = chat;
-    ssize_t to_write = written_len;
+    char *p = chat;
+    p[written_len] = '\n';
+    p[written_len + 1] = '\0';
+    ssize_t to_write = written_len + 1;
     while (to_write > 0)
     {
         ssize_t w = write(file_D, p, (size_t)to_write);
@@ -376,7 +381,7 @@ int log_chat(char *chat, int written_len)
         p += w;
         to_write -= w;
     }
-    write(file_D, "\n", sizeof(char));
+    // write(file_D, "\n", sizeof(char));
     pthread_mutex_unlock(&mutexFD);
 
     return g_stop;
@@ -386,7 +391,7 @@ int log_chat(char *chat, int written_len)
 int broadcast_chat(char *chat, int written_len, int sender)
 {
     pthread_mutex_lock(&mutexFD);
-    for (int i = 0; i < numOfClients; i++)
+    for (int i = 0; i < MAX_CLIENTS; i++)
     {
         if (client_sockets[i] != 0 && client_sockets[i] != sender)
         {

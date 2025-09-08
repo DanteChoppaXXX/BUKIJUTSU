@@ -6,3 +6,228 @@ Master #=> Hello 47 [HH:MM]
 Agent47 #=> Greetings Master [HH:MM]
 Master #=> I know you're ready! [HH:MM]
 Agent47 #=> Absolutely Master [HH:MM]
+user1 [HH:MM]
+user1 #=> hello [HH:MM]
+user1 #=> what [HH:MM]
+agant333 [HH:MM]
+agant333 #=> hello [HH:MM]
+agant333 #=> bye [HH:MM]
+usero [HH:MM]
+usero #=> what [HH:MM]
+usero #=> is [HH:MM]
+usero #=> htat [HH:MM]
+agent47 [22:16]
+killerman [22:16]
+killerman #=> hello agent [22:16]
+agent47 #=> hello killer [22:16]
+Agent47 [22:21]
+Ninja [22:21]
+[Ninja]#=> Hello Agent [22:21]
+[Ninja]#=> Are you ready? [22:22]
+[Agent47]#=> Hello Ninja [22:22]
+[Agent47]#=> Absolutely!!! [22:22]
+[Ninja]#=> Let's Go! [22:23]
+[Agent47]#=> Hell Yeah! [22:23]
+Ninja 	[22:29]
+Agent47 	[22:29]
+[Agent47]=> 	Hello 	[22:30]
+[Ninja]=> 	Hello Agent47 	[22:30]
+[Ninja]=> 	Are you ready? 	[22:31]
+Agent47	[22:39]
+Ninja	[22:39]
+[Ninja]>>	Hello Agent	[22:39]
+[Ninja]>>	Are you ready?	[22:40]
+[Agent47]>>	Hello Ninja	[22:40]
+[Agent47]>>	Absolutely!	[22:40]
+[Ninja]>>	Let's Go!	[22:40]
+[Agent47]>>	Hell Yeah!	[22:41]
+Agent47 <[22:50]
+Ninja <[22:50]
+[Ninja]>>		Hello Agent! <[22:50]
+[Ninja]>>		Are you ready? <[22:51]
+[Agent47]>>		Hello Ninja <[22:51]
+[Agent47]>>		Absolutely! <[22:51]
+[Agent47]>>		Let's Get Going! <[22:52]
+[Ninja]>>		Very well then <[22:57]
+[Agent47]>>		Welcome to the game <[22:58]
+[Ninja]>>		Thank you Agent <[22:58]
+[Agent47]>>		First off — this is a fantastic first draft for Step 1. You’ve gone way beyond the bare minimum (mutex-protected logging, signal handling, username validation, multi-threaded client). That’s solid systems programming. <[23:11]
+Assassin	<<23:17>>
+Ninja0x0	<<23:18>>
+[Ninja0x0]:>>	Hello	<<23:18>>
+[Ninja0x0]:>>	Are you ready?	<<23:18>>
+[Assassin]:>>	Hello Ninja	<<23:19>>
+[Assassin]:>>	I am ready!	<<23:20>>
+[Ninja0x0]:>>	Okay then	<<23:20>>
+[Ninja0x0]:>>	Okay then	<<23:21>>
+[Ninja0x0]:>>	Hello	<<23:21>>
+Assassin                                                        	<<23:24>>
+Hitman                                                          	<<23:24>>
+[Hitman]:>>	Hello Assassin!                                     	<<23:24>>
+[Hitman]:>>	First off — this is a fantastic first draft for Step 1. You’ve gone way beyond the bare minimum (mutex-protected logging, signal handling, username validation, multi-threaded client). That’s solid systems programming.	<<23:25>>
+[Assassin]:>>	Alright!                                          	<<23:25>>
+                                                        Assassin	<<23:27>>
+                                                          Hitman	<<23:28>>
+                                     [Hitman]:>>	Hello Assassin!	<<23:28>>
+                                     [Assassin]:>>	Hello Hitman!	<<23:28>>
+Hitman<<23:36>>
+Assassin<<23:36>>
+[Assassin]:>>                                               Hello Hitman!	<<23:36>>
+[Assassin]:>>                                              Are you ready?	<<23:37>>
+[Hitman]:>>                                        Absolutely! Assassin	<<23:38>>
+[Hitman]:>>                                          Let's get going...	<<23:38>>
+[Assassin]:>>                                   Great! that's the spirit.	<<23:39>>
+[Assassin]:>>                                                  Awesome!!!	<<23:42>>
+[Hitman]:>>                                                         wow	<<23:43>>
+[Hitman]:>>                                                         wow	<<23:43>>
+[Assassin]:>>                                                        wait	<<23:43>>
+[Assassin]:>>                                                        wait	<<23:43>>
+[Assassin]:>>                     fldsfjlsfjslfdfjd ffjdkfjdflkjd fdfjkdf	<<23:43>>
+[Hitman]:>>              kdkfkldjlfkd  dfjdkfjdlfjd djfd d fdjfkdfjdfd 	<<23:44>>
+Assassin
+Hitman
+[Hitman]:>>                                              Hello Assassin	<<23:48>>
+[Hitman]:>>                                  Are you ready for ACTION!?	<<23:49>>
+[Assassin]:>>                                               Hello Hitman!	<<23:49>>
+[Assassin]:>>                                                 Absolutely!	<<23:49>>
+[Assassin]:>>                                         Let's fucking GO!!!	<<23:49>>
+[Hitman]:>>                                              very well then	<<23:50>>
+[Assassin]:>>                                     welcome to the dojo man	<<23:50>>
+[Hitman]:>>                                                  Thank you!	<<23:51>>
+Hitman
+Assassin
+[Assassin]:>>Hello Hitman<<23:58>>
+[Assassin]:>>welcome to the dojo man<<23:58>>
+[Hitman]:>>Hello Assassin<<23:58>>
+user1
+user9
+[user9]:>>                     Hello man<<00:00>>
+[user9]:>>            What's good today?<<00:01>>
+[user1]:>>                      Hey Bro!<<00:01>>
+[user1]:>>           Nothing Much my man<<00:01>>
+Killerman
+Badman
+[Badman]:>>                  Hello my man <(00:07)
+[Badman]:>>               what's popping? <(00:08)
+[Killerman]:>>                Hey yo badman! <(00:08)
+[Killerman]:>>        I'm just chilling brah <(00:08)
+[Badman]:>>                I feel you man <(00:08)
+[Badman]:>>                             1 <(00:10)
+[Badman]:>>                             2 <(00:10)
+[Badman]:>>                             3 <(00:10)
+[Badman]:>>                             4 <(00:10)
+[Killerman]:>>                             5 <(00:10)
+[Killerman]:>>                             6 <(00:10)
+[Killerman]:>>                             7 <(00:10)
+[Killerman]:>>                             8 <(00:10)
+[Badman]:>>                          cool <(00:11)
+[Killerman]:>>                          cool <(00:11)
+user00
+user99
+[user99]:>>                     hello man <(00:15)
+[user99]:>>                      whaat up <(00:16)
+[user00]:>>                       hey man <(00:16)
+[user00]:>>                   me good man <(00:16)
+assassin
+[assassin]:>>                         hello <(00:17)
+[assassin]:>>                          ficl <(00:17)
+[user99]:>>                          shit <(00:17)
+[user99]:>>                           bad <(00:18)
+killer
+user00
+user
+[user]:>>hello                          <(00:20)
+[killer]:>>hey                            <(00:22)
+[killer]:>>ncddd                          <(00:22)
+killerman
+user
+[      user]:>>               Hello Killerman<(00:30)
+[      user]:>>                  What's good?<(00:30)
+[ killerman]:>>                      Hey user<(00:30)
+[ killerman]:>>                 Just chilling<(00:30)
+killerman
+[killerman ]:>>                  hello people<(00:32)
+[      user]:>>                       sup man<(00:32)
+Killerman
+user
+user      $:>               Hello Killerman <(00:36)
+user      $:>               what's popping? <(00:36)
+Killerman $:>                   hey yo user <(00:36)
+Killerman $:>  just chilling today my nigga <(00:36)
+blackwidow4455419
+blackwidow4455419$:>                  hellp poeple <(00:39)
+killerman
+user
+[33m[00:48:23][0m [36muser        [0m > hello
+[33m[00:48:34][0m [36muser        [0m > what's good
+[33m[00:48:48][0m [36mkillerman   [0m > hey user
+[33m[00:48:54][0m [36mkillerman   [0m > how you doing?
+[33m[00:50:54][0m [36mkillerman   [0m > Would you like me to rewrite your print_message() function using this aligned + colored + wrapped style, so you can just drop it into your program?
+[33m[00:52:17][0m [36muser        [0m > okay cool
+[33m[00:52:31][0m [36mkillerman   [0m > yeah
+Killer
+user
+[33m[01:32:30][0m [36muser        [0m > hello
+[33m[01:32:44][0m [36mKiller      [0m > hey
+[33m[01:33:31][0m [36muser        [0m > you
+[33m[01:33:37][0m [36mKiller      [0m > hey
+killerman
+user
+killerman
+user
+[33m[01:46:48][0m [36muser        [1;32m >[0m hello
+[33m[01:46:58][0m [36mkillerman   [1;32m >[0m hey user
+[33m[01:47:20][0m [36mkillerman   [1;32m >[0m what's good?
+[33m[01:47:35][0m [36muser        [1;32m >[0m shit
+killerman
+user0
+[33m[01:51:08][0m [36muser0       [1;32m >[0m hello man
+[33m[01:51:22][0m [36muser0       [1;32m >[0m what popping?
+[33m[01:51:32][0m [36mkillerman   [1;32m >[0m yo man
+[33m[01:51:52][0m [36mkillerman   [1;32m >[0m just chilling...
+[33m[01:51:59][0m [36mkillerman   [1;32m >[0m and you?
+[33m[01:52:09][0m [36muser0       [1;32m >[0m same here man
+[33m[01:52:27][0m [36muser0       [1;32m >[0m nothing much
+[33m[01:52:33][0m [36mkillerman   [1;32m >[0m dope
+killerman
+user0
+[33m[01:56:24][0m [36muser0       [1;32m >[0m hello
+[33m[01:56:26][0m [36muser0       [1;32m >[0m whe
+[33m[01:56:27][0m [36muser0       [1;32m >[0m ehd
+[33m[01:56:46][0m [36muser0       [1;32m >[0m wow
+[33m[01:58:44][0m [36muser0       [1;32m >[0m dkfjlsfdsjfd dkfjdjjfdldjfdf
+[33m[01:58:46][0m [36muser0       [1;32m >[0m jdkj
+[33m[01:59:08][0m [36muser0       [1;32m >[0m fg
+killerman
+user00
+[33m[02:00:36][0m [36muser00      [1;32m >[0m hello man
+[33m[02:00:51][0m [36muser00      [1;32m >[0m what's cracking?
+[33m[02:01:06][0m [36mkillerman   [1;32m >[0m Yo user00
+[33m[02:01:17][0m [36mkillerman   [1;32m >[0m Just chilling...
+[33m[02:01:24][0m [36mkillerman   [1;32m >[0m nothing much and you?
+[33m[02:01:56][0m [36muser00      [1;32m >[0m same here man
+[33m[02:02:05][0m [36mkillerman   [1;32m >[0m Typing somethin Oops
+[33m[02:03:12][0m [36mkillerman   [1;32m >[0m shit
+killerman
+user00
+[33m[02:13:03][0m [36muser00      [1;32m >[0m hello people
+[33m[02:13:30][0m [36muser00      [1;32m >[0m whatdup
+[33m[02:13:37][0m [36mkillerman   [1;32m >[0m sup man
+[33m[02:13:44][0m [36mkillerman   [1;32m >[0m whta
+killerman
+user00
+[33m[02:14:39][0m [36muser00      [1;32m >[0m hello man
+[33m[02:14:49][0m [36muser00      [1;32m >[0m what happen
+[33m[02:15:00][0m [36muser00      [1;32m >[0m stand up nigeria
+[33m[02:15:09][0m [36mkillerman   [1;32m >[0m sup bro
+[33m[02:15:18][0m [36mkillerman   [1;32m >[0m I'm just chilling...
+[33m[02:15:34][0m [36muser00      [1;32m >[0m oh same here man
+[33m[02:15:43][0m [36mkillerman   [1;32m >[0m I feel you ma nigga
+[33m[02:17:07][0m [36mkillerman   [1;32m >[0m  Would you like me to rewrite your print_message() function using this aligned + colored + wrapped style, so you can just drop it into your program?
+[33m[02:17:23][0m [36muser00      [1;32m >[0m Oh no problem my bro
+[33m[02:18:17][0m [36muser00      [1;32m >[0m  Would you like me to rewrite your print_message() function using this aligned + colored + wrapped style, so you can just drop it into your program?
+[33m[02:18:25][0m [36muser00      [1;32m >[0m good?
+[33m[02:18:39][0m [36mkillerman   [1;32m >[0m fantastic
+[33m[02:19:01][0m [36mkillerman   [1;32m >[0m bye!
+[33m[02:19:14][0m [36muser00      [1;32m >[0m aiit
+userd
