@@ -28,7 +28,7 @@ pthread_mutex_t mutexFD = PTHREAD_MUTEX_INITIALIZER;
 
 // Shared: file descriptor for logging chat, number of clients online and
 // array to store connected client's socket.
-int file_D, numOfClients, client_sockets[MAX_CLIENTS];
+int file_D, numOfClients, client_sockets[MAX_CLIENTS], total_messages;
 
 // Use a signal-safe flag to trigger shutdown instead of exiting in handler.
 static volatile sig_atomic_t g_stop = 0;
@@ -126,8 +126,9 @@ int main(int argc, char *argv[])
     int client_sock, threadId;
     pthread_t client_thread;
 
-    // Initialize number of clients online to 0.
+    // Initialize number of clients online and total messages to 0.
     numOfClients = 0;
+    total_messages = 0;
 
     // Zero out the client_sockets array.
     memset(client_sockets, 0, sizeof(client_sockets));
@@ -355,6 +356,10 @@ int remove_client(int client_socket)
         }
     }
     printf("[#] Clients Online =>[%d]\n", numOfClients);
+    if (numOfClients == 0)
+    {
+        printf("[#] Total Messages Received =>[%d]\n", total_messages);    
+    }
     pthread_mutex_unlock(&mutexFD);
     return g_stop;
 }
@@ -364,6 +369,7 @@ int log_chat(char *chat, int written_len)
 {
     // Handle partial writes and errors.
     pthread_mutex_lock(&mutexFD);
+    total_messages += 1;
     char *p = chat;
     p[written_len] = '\n';
     p[written_len + 1] = '\0';
