@@ -54,7 +54,7 @@ typedef struct
 
 // Function Prototype.
 void queue_init(ConnQueue *queue);
-void queue_enqueue(ConnQueue *queue, int client_sock);
+int queue_enqueue(ConnQueue *queue, int client_sock);
 int queue_dequeue(ConnQueue *queue);
 void *worker_thread(void *arg);
 void handle_client(int client_socket);
@@ -156,13 +156,7 @@ int main(int argc, char *argv[])
 
     // Allocate memory for connection queue.
     ConnQueue conn_queue;
-    // if (conn_queue == NULL)
-    // {
-    //     fprintf(stderr, "[x] Memory Allocation! [FAILED]\n");
-    //     close(server_sock);
-    //     exit(EXIT_FAILURE);
-    // }
-    //
+
     // Initialize queue.
     queue_init(&conn_queue);
 
@@ -204,8 +198,6 @@ int main(int argc, char *argv[])
             continue;
         }
 
-        queue_enqueue(&conn_queue, client_sock);
-
         // Log client address safely with inet_ntop (thread-safe).
         char addrbuf[INET_ADDRSTRLEN];
         const char *ip =
@@ -243,6 +235,25 @@ int main(int argc, char *argv[])
             close(client_sock);
             continue;
         }
+
+        // Enqueue the client socket.
+        if (queue_enqueue(&conn_queue, client_sock) != 0)
+        {
+            // Undo registration, under mutex.
+            remove_client(client_sock);
+            continue;
+        }
+    }
+
+    /* wake all workers */
+    pthread_mutex_lock(&conn_queue.mutex);
+    pthread_cond_broadcast(&conn_queue.cond);
+    pthread_mutex_unlock(&conn_queue.mutex);
+
+    //* optionally join threads */
+    for (int i = 0; i < MAX_THREADS; ++i)
+    {
+        pthread_join(threads[i], NULL);
     }
 
     // Cleanup
@@ -265,7 +276,7 @@ void handle_client(int client_socket)
     {
         fprintf(stderr, "[x] Sending! [FAILED: %s]\n", strerror(errno));
         close(client_socket);
-        return ;
+        return;
     }
     char buffer[BUFFER_SIZE], chat[BUFFER_SIZE];
     ssize_t bytes_received;
@@ -283,7 +294,7 @@ void handle_client(int client_socket)
 
             // Clean up resources.
             close(client_socket);
-            return ;
+            return;
         }
         else if (bytes_received < 0)
         {
@@ -296,7 +307,7 @@ void handle_client(int client_socket)
 
             // Clean up resources.
             close(client_socket);
-            return ;
+            return;
         }
 
         buffer[bytes_received] = '\0';
@@ -328,7 +339,7 @@ void handle_client(int client_socket)
     }
 
     close(client_socket);
-    return ;
+    return;
 }
 
 // Graceful shutdown handling.
@@ -357,12 +368,14 @@ void *worker_thread(void *arg)
         // 1. Wait until a client socket is available
         int client_socket = queue_dequeue(queue);
 
-        // 2. Handle the client
-        // (reuse your Step 1 handle_client logic,
-        // but now it's called directly, not in a new pthread_create)
-        handle_client(client_socket);
+        if (client_socket == -1)
+        {
+            // Shutdown.
+            break;
+        }
 
-        // 3. Loop back to pick up the next socket
+        // 2. Handle the client
+        handle_client(client_socket);
     }
 
     return NULL;
@@ -391,7 +404,7 @@ void queue_init(ConnQueue *queue)
 }
 
 // Enqueue function.
-void queue_enqueue(ConnQueue *queue, int client_sock)
+int queue_enqueue(ConnQueue *queue, int client_sock)
 {
     // Lock mutex.
     pthread_mutex_lock(&queue->mutex);
@@ -400,9 +413,11 @@ void queue_enqueue(ConnQueue *queue, int client_sock)
     if (queue->count >= QUEUE_SIZE)
     {
         // drop and close the socket.
+        pthread_mutex_unlock(&queue->mutex);
         const char *busy = "Server busy. Try again later.\n";
-        (void)send(client_sock, busy, strlen(busy), 0);
+        send(client_sock, busy, strlen(busy), 0);
         close(client_sock);
+        return -1;
     }
 
     // Insert socket at rear.
@@ -412,13 +427,15 @@ void queue_enqueue(ConnQueue *queue, int client_sock)
     queue->rear = (queue->rear + 1) % QUEUE_SIZE;
 
     // Increment count.
-    queue->count += 1;
+    queue->count++;
 
     // Signal cond so a worker wakes up.
     pthread_cond_signal(&queue->cond);
 
     // Unlock mutex.
     pthread_mutex_unlock(&queue->mutex);
+
+    return 0;
 }
 
 // Dequeue function.
@@ -427,9 +444,16 @@ int queue_dequeue(ConnQueue *queue)
     // Lock mutex.
     pthread_mutex_lock(&queue->mutex);
 
-    while (queue->count == 0)
+    while (queue->count == 0 && !g_stop)
     {
         pthread_cond_wait(&queue->cond, &queue->mutex);
+    }
+
+    if (queue->count == 0 && g_stop)
+    {
+        // No items and shutting down...
+        pthread_mutex_unlock(&queue->mutex);
+        return -1;
     }
 
     // Take socket at front.
@@ -439,7 +463,7 @@ int queue_dequeue(ConnQueue *queue)
     queue->front = (queue->front + 1) % QUEUE_SIZE;
 
     // Decrement count.
-    queue->count -= 1;
+    queue->count--;
 
     // Signal cond so a worker wakes up.
     pthread_cond_signal(&queue->cond);

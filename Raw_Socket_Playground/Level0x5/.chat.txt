@@ -248,3 +248,11 @@ killer
 [33m[06:55:10][0m [36muser32      [1;32m >[0m hello server
 [33m[06:59:37][0m [36msudo33      [1;32m >[0m hello
 [33m[07:00:20][0m [36muser32      [1;32m >[0m yo man!
+[33m[07:53:28][0m [36muser23      [1;32m >[0m who
+[33m[07:53:30][0m [36muser23      [1;32m >[0m jde
+[33m[07:54:04][0m [36mkiller      [1;32m >[0m yo
+[33m[07:54:08][0m [36mkiller      [1;32m >[0m what's good
+[33m[07:54:16][0m [36muser23      [1;32m >[0m sup man
+[33m[07:54:21][0m [36muser23      [1;32m >[0m just chilling
+[33m[07:54:36][0m [36mkiller      [1;32m >[0m aiit bye!
+[33m[07:54:44][0m [36muser23      [1;32m >[0m  fuck you!
