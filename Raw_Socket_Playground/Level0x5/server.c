@@ -287,7 +287,7 @@ void handle_client(int client_socket)
         bytes_received = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
         if (bytes_received == 0)
         {
-            fprintf(stderr, "[-] Client! %s [DISCONNECTED]\n", strerror(errno));
+            fprintf(stderr, "[-] Client! FD: %d [DISCONNECTED]\n", client_socket);
 
             // Remove client socket.
             remove_client(client_socket);
@@ -392,13 +392,13 @@ void queue_init(ConnQueue *queue)
     // Initialize mutex and cond.
     if (pthread_mutex_init(&queue->mutex, NULL) != 0)
     {
-        fprintf(stderr, "[-] PTHREAD_MUTEX_INIT! %s [FAILED]\n",
+        fprintf(stderr, "[-] PTHREAD_MUTEX_INIT! [FAILED: %s]\n",
                 strerror(errno));
     }
 
     if (pthread_cond_init(&queue->cond, NULL) != 0)
     {
-        fprintf(stderr, "[-] PTHREAD_COND_INIT! %s [FAILED]\n",
+        fprintf(stderr, "[-] PTHREAD_COND_INIT! [FAILED: %s]\n",
                 strerror(errno));
     }
 }
@@ -464,9 +464,6 @@ int queue_dequeue(ConnQueue *queue)
 
     // Decrement count.
     queue->count--;
-
-    // Signal cond so a worker wakes up.
-    pthread_cond_signal(&queue->cond);
 
     // Unlock mutex.
     pthread_mutex_unlock(&queue->mutex);
