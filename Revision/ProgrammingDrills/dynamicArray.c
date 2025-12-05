@@ -36,4 +36,6 @@ int main(void)
     printf("\nThe Average of the numbers is => [%d]\n", (sum/size));
 
     free(numbers);
+
+    return 0;
 }
