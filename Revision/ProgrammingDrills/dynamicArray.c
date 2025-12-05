@@ -10,7 +10,18 @@ int main(void)
     printf("Enter the amount of numbers: ");
     scanf("%d", &size);
 
+    if (size <= 0)
+    {
+        printf("Size must be positive.\n");
+        return 1;
+    }
+
     int *numbers = malloc(size * sizeof(int));
+    if (numbers == NULL)
+    {
+        printf("Memory allocation failed.\n");
+        return 1;
+    }
 
     // Get the numbers from the user.
     size > 1 ? printf("Enter all %d numbers: ", size) : printf("Enter the number: ");
@@ -33,8 +44,8 @@ int main(void)
         sum += numbers[i];
     }
 
-    printf("\nThe Average of the numbers is => [%d]\n", (sum/size));
-
+    printf("\nThe Average of the numbers is => [%.2f]\n", (float)sum / size);
+    
     free(numbers);
 
     return 0;
