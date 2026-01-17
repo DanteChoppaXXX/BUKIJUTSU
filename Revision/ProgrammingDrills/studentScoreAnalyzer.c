@@ -4,18 +4,18 @@
 #include <stdlib.h>
 
 // Function Prototypes.
-double calculate_average(double scores[], int count);
-double find_max(double scores[], int count);
-double find_min(double scores[], int count);
-double count_above_average(double scores[], int count, double average);
+double calculate_average(const double scores[], int count);
+double find_max(const double scores[], int count);
+double find_min(const double scores[], int count);
+int count_above_average(const double scores[], int count, double average);
 
 int main(void){
 
     // Ask the user for number of students (max 50)
     int count = 0;
     printf("Enter the number of students (max 50): ");
-    if(scanf("%d", &count) != 1 || count > 50) {
-        fprintf(stderr, "\033[1;31m[x] Invalid Input! [ERROR]\033[0m\n");
+    if(scanf("%d", &count) != 1 || count <= 0 || count > 50) {
+        fprintf(stderr, "\033[1;31m[x] Invalid Student Count! [ERROR]\033[0m\n");
         return EXIT_FAILURE;
     }
     
@@ -25,8 +25,8 @@ int main(void){
     printf("\n\033[1;34mEnter The Score Of Each Student (0-100):\033[0m\n");
     for (int i = 0; i < count; i++) {
         printf("Enter the score of student %d: ", i + 1);
-        if(scanf("%lf", &scores[i]) != 1 || scores[i] > 100){
-            fprintf(stderr, "\033[1;31m[x] Score should not be greater than 100 [ERROR]\033[0m\n");
+        if(scanf("%lf", &scores[i]) != 1 || scores[i] < 0 || scores[i] > 100){
+            fprintf(stderr, "\033[1;31m[x] Score must be between 0 and 100 [ERROR]\033[0m\n");
             return EXIT_FAILURE;
         }  
     }
@@ -49,12 +49,12 @@ int main(void){
     printf("The Lowest Score is\t=> [\033[1;32m%.2lf\033[0m]\n", find_min(scores, count));
 
     // Print how many students scored above average.
-    printf("Students Above Average\t=> [\033[1;33m%.0lf\033[0m]\n", count_above_average(scores, count, average));
+    printf("Students Above Average\t=> [\033[1;33m%d\033[0m]\n", count_above_average(scores, count, average));
 
     return EXIT_SUCCESS;
 }
 
-double calculate_average(double scores[], int count){
+double calculate_average(const double scores[], int count){
     double total_score = 0;
 
     for (int i = 0; i < count; i++) {
@@ -63,8 +63,8 @@ double calculate_average(double scores[], int count){
     return (total_score / (double)count);
 }
 
-double find_max(double scores[], int count){
-    double highest = 0;
+double find_max(const double scores[], int count){
+    double highest = scores[0];
 
     for (int i = 0; i < count; i++) {
         if (highest < scores[i]) {
@@ -74,8 +74,8 @@ double find_max(double scores[], int count){
     return highest;
 }
 
-double find_min(double scores[], int count){
-    double lowest = 100;
+double find_min(const double scores[], int count){
+    double lowest = scores[0];
 
     for (int i = 0; i < count; i++) {
         if (lowest > scores[i]) {
@@ -85,8 +85,8 @@ double find_min(double scores[], int count){
     return lowest;
 }
 
-double count_above_average(double scores[], int count, double average){
-    double above_average = 0;
+int count_above_average(const double scores[], int count, double average){
+    int above_average = 0;
 
     for (int i = 0; i < count; i++) {
         if (scores[i] > average) {
