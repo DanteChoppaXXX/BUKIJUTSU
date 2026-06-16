@@ -9,4 +9,4 @@ typedef struct{
 } Contact;
 
 // Function Prototypes.
-
+void addContacts();

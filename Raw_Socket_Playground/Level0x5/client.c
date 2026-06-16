@@ -88,20 +88,7 @@ int main(int argc, char *argv[])
         close(server_sock);
         exit(EXIT_FAILURE);
     }
-    // printf("[+] Connected! [SUCCESS]\n");
-
-    // printf("Username=> %s\n", username);
-
-    // Send the username to the server.
-    // ssize_t bytes_sent = send(server_sock, username, strlen(username), 0);
-    // if (bytes_sent < 0)
-    // {
-    //     fprintf(stderr, "[x] Sending! [FAILED]\n");
-    //     close(server_sock);
-    //     exit(EXIT_FAILURE);
-    // }
-    // printf("[+] Sent [SUCCESS]\n");
-
+   
     char buffer[BUFFER_SIZE];
     ssize_t bytes_received;
 
