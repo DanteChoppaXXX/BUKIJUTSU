@@ -1,70 +1,59 @@
-// Write a program in C to create and display a singly linked-list.
+// Implementing a linked list.
 
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct Node
-{
-    int number;
-    struct Node *next;
+typedef struct Node{
+    int data;
+    struct Node *link;
 } Node;
 
 int main(void)
 {
-    // Declare a head node.
-    Node *head;
+    // Create a head node.
+    Node *head = malloc(sizeof(Node));
+    if (head == NULL) {
+        fprintf(stderr, "[x] Memory Allocation! [FAILED]");
+        return 1;
+    }
+    // Store value in the node.
+    head->data = 419;
+    head->link = NULL;
 
-    // Ask user for number of nodes.
-    int numofNodes;
-    printf("Enter number of node: ");
-    scanf("%d%*c", &numofNodes);
-
-    // Create the nodes and store user input.
-    for (int i = 0; i < numofNodes; i++) {
-        Node *node = malloc(sizeof(Node));
-        if (node == NULL) {
-            fprintf(stderr, "[x] Memory Allocation! [FAILED]");
-            return 1;
-        }
-
-        // Ask user to enter number.
-        printf("Enter data for node %d: ", i + 1);
-        scanf("%d%*c", &node->number);
-
-        node->next = NULL;
-
-        // Point the head to the node.
-        // Check if list is empty.
-        if (head == NULL) {
-            head = node;
-        }
-        else {
-            // Iterate over nodes in list.
-            for (Node *ptr = head; ptr != NULL; ptr = ptr->next) {
-                // If at the end of list.
-                if (ptr->next == NULL) {
-                    ptr->next = node;
-                    break;
-                }
-            }
-        }
+    // Create another node.
+    Node *current = malloc(sizeof(Node));
+    if (current == NULL) {
+        fprintf(stderr, "[x] Memory Allocation! [FAILED]");
+        return 1;
     }
 
-    // Display the data in the nodes.
-    printf("Data entered in the list:\n");
-    Node *ptr = head;
+    // Store value inside the current node.
+    current->data = 504;
+    current->link = NULL;
+
+    // Point head to the current node.
+    head->link = current;
+
+    // Create another node.
+    current = malloc(sizeof(Node));
+    if (current == NULL) {
+        fprintf(stderr, "[x] Memory Allocation! [FAILED]");
+        return 1;
+    }
+
+    // Store value inside the current node.
+    current->data = 720;
+    current->link = NULL;
+
+    // Point head to the current node.
+    head->link->link = current;
+
+    printf("Node 1 Data => %d\n", head->data);
+    printf("Node 2 Data => %d\n", current->data);
+    printf("Node 3 Data => %d\n", head->link->data);
     
-    while (ptr != NULL) {
-        printf("Data = %d\n", ptr->number);
-        ptr = ptr->next;
-    }
-
-    // Free a node from memory.
-    Node *clean = head;
-    while (clean != NULL) {
-        Node *next = clean->next;
-        free(clean);
-        clean = next;
-    }
+    free(head->link);
+    free(head);
+    free(current);
     return 0;
 }
