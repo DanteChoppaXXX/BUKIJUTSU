@@ -1,0 +1,3 @@
+0
+Parent increment counter to 2
+Child increment counter to 1
